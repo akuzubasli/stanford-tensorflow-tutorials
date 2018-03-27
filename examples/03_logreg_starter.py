@@ -27,7 +27,7 @@ mnist_folder = 'data/mnist'
 utils.download_mnist(mnist_folder)
 train, val, test = utils.read_mnist(mnist_folder, flatten=True)
 
-# Step 2: Create datasets and iterator
+# Step 2: Create datasets and iterator (tf.data.Dataset)
 # create training Dataset and batch it
 train_data = tf.data.Dataset.from_tensor_slices(train)
 train_data = train_data.shuffle(10000) # if you want to shuffle your data
@@ -38,7 +38,8 @@ test_data = None
 #############################
 ########## TO DO ############
 #############################
-
+test_data = tf.data.Dataset.from_tensor_slices(test)
+test_data = test_data.batch(batch_size)
 
 # create one iterator and initialize it with different datasets
 iterator = tf.data.Iterator.from_structure(train_data.output_types, 
@@ -52,12 +53,13 @@ test_init = iterator.make_initializer(test_data)	# initializer for train_data
 # w is initialized to random variables with mean of 0, stddev of 0.01
 # b is initialized to 0
 # shape of w depends on the dimension of X and Y so that Y = tf.matmul(X, w)
-# shape of b depends on Y
+# shape of b depends on Yx
 w, b = None, None
 #############################
 ########## TO DO ############
 #############################
-
+w = tf.get_variable("weights", shape=([784, 10]), initializer=tf.random_normal_initializer(mean=0.0, stddev=0.01))
+b = tf.get_variable("bias", initializer=tf.zeros(shape=[10,]))
 
 # Step 4: build model
 # the model that returns the logits.
@@ -66,7 +68,7 @@ logits = None
 #############################
 ########## TO DO ############
 #############################
-
+logits = tf.matmul(img, w) + b
 
 # Step 5: define loss function
 # use cross entropy of softmax of logits as the loss function
@@ -74,7 +76,8 @@ loss = None
 #############################
 ########## TO DO ############
 #############################
-
+entropy = tf.nn.softmax_cross_entropy_with_logits(labels = label, logits = logits)
+loss = tf.reduce_mean(entropy)
 
 # Step 6: define optimizer
 # using Adamn Optimizer with pre-defined learning rate to minimize loss
@@ -82,7 +85,7 @@ optimizer = None
 #############################
 ########## TO DO ############
 #############################
-
+optimizer = tf.train.AdamOptimizer(learning_rate = learning_rate).minimize(loss)
 
 # Step 7: calculate accuracy with test set
 preds = tf.nn.softmax(logits)
@@ -105,7 +108,7 @@ with tf.Session() as sess:
                 _, l = sess.run([optimizer, loss])
                 total_loss += l
                 n_batches += 1
-        except tf.errors.OutOfRangeError:
+        except tf.errors.OutOfRangeError: # instead of conditionals (i > n_epochs)
             pass
         print('Average loss epoch {0}: {1}'.format(i, total_loss/n_batches))
     print('Total time: {0} seconds'.format(time.time() - start_time))

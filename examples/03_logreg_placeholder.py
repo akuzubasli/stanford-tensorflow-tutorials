@@ -11,7 +11,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.examples.tutorials.mnist import input_data
+from tensorflow.examples.tutorials.mnist import input_data # built in function to load data
 import time
 
 import utils
@@ -23,7 +23,7 @@ n_epochs = 30
 
 # Step 1: Read in data
 # using TF Learn's built in function to load MNIST data to the folder data/mnist
-mnist = input_data.read_data_sets('data/mnist', one_hot=True)
+mnist = input_data.read_data_sets('data/mnist', one_hot=True) # input_data is from tensorflow.examples.tutorials.mnist 
 X_batch, Y_batch = mnist.train.next_batch(batch_size)
 
 # Step 2: create placeholders for features and labels
@@ -59,8 +59,8 @@ optimizer = tf.train.AdamOptimizer(learning_rate).minimize(loss)
 
 # Step 7: calculate accuracy with test set
 preds = tf.nn.softmax(logits)
-correct_preds = tf.equal(tf.argmax(preds, 1), tf.argmax(Y, 1))
-accuracy = tf.reduce_sum(tf.cast(correct_preds, tf.float32))
+correct_preds = tf.equal(tf.argmax(preds, 1), tf.argmax(Y, 1)) # instead of conditionals (==)
+accuracy = tf.reduce_sum(tf.cast(correct_preds, tf.float32)) # tf.cast, casts correct_preds to float32.
 
 writer = tf.summary.FileWriter('./graphs/logreg_placeholder', tf.get_default_graph())
 with tf.Session() as sess:

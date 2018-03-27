@@ -85,7 +85,7 @@ with tf.Session() as sess:
                 _, l = sess.run([optimizer, loss])
                 total_loss += l
                 n_batches += 1
-        except tf.errors.OutOfRangeError:
+        except tf.errors.OutOfRangeError: # instead of conditionals 
             pass
         print('Average loss epoch {0}: {1}'.format(i, total_loss/n_batches))
     print('Total time: {0} seconds'.format(time.time() - start_time))
