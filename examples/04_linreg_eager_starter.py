@@ -20,6 +20,8 @@ DATA_FILE = 'data/birth_life_2010.txt'
 ########## TO DO ############
 #############################
 
+tf.enable_eager_execution()
+
 # Read the data into a dataset.
 data, n_samples = utils.read_birth_life_data(DATA_FILE)
 dataset = tf.data.Dataset.from_tensor_slices((data[:,0], data[:,1]))
@@ -28,14 +30,16 @@ dataset = tf.data.Dataset.from_tensor_slices((data[:,0], data[:,1]))
 #############################
 ########## TO DO ############
 #############################
-w = None
-b = None
+w = tfe.Variable(0.0)
+b = tfe.Variable(0.0)
 
 # Define the linear predictor.
 def prediction(x):
   #############################
   ########## TO DO ############
   #############################
+  y_predicted = x * w + b
+  return y_predicted
   pass
 
 # Define loss functions of the form: L(y, y_predicted)
@@ -43,13 +47,21 @@ def squared_loss(y, y_predicted):
   #############################
   ########## TO DO ############
   #############################
+  loss = (y - y_predicted) **2
+  return loss
   pass
 
-def huber_loss(y, y_predicted):
+def huber_loss(y, y_predicted, m=1.0):
   """Huber loss with `m` set to `1.0`."""
   #############################
   ########## TO DO ############
   #############################
+  residuals = tf.abs(y-y_predicted)
+  if residuals <= m:
+    loss = residuals ** 2
+  else:
+    loss = 2 * m * residuals - m**2 
+  return loss
   pass
 
 def train(loss_fn):
@@ -60,24 +72,29 @@ def train(loss_fn):
   # Define the function through which to differentiate.
   #############################
   ########## TO DO ############
-  #############################
+  ############################# 
   def loss_for_example(x, y):
+    y_predicted = prediction(x)
+    loss = loss_fn(y, y_predicted)
+    return loss
     pass
 
   # Obtain a gradients function using `tfe.implicit_value_and_gradients`.
   #############################
   ########## TO DO ############
   #############################
-  grad_fn = None
+  grad_fn = tfe.implicit_value_and_gradients(loss_for_example)
+  
 
   start = time.time()
-  for epoch in range(100):
+  for epoch in range(150):
     total_loss = 0.0
     for x_i, y_i in tfe.Iterator(dataset):
       # Compute the loss and gradient, and take an optimization step.
       #############################
       ########## TO DO ############
       #############################
+      loss, gradients = grad_fn(x_i, y_i)
       optimizer.apply_gradients(gradients)
       total_loss += loss
     if epoch % 10 == 0:
