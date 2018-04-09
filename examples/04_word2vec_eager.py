@@ -33,10 +33,14 @@ SKIP_STEP = 5000
 DOWNLOAD_URL = 'http://mattmahoney.net/dc/text8.zip'
 EXPECTED_BYTES = 31344016
 
+
+# Buid your model as a "class" for decomposition and reusability.
 class Word2Vec(object):
   def __init__(self, vocab_size, embed_size, num_sampled=NUM_SAMPLED):
+    """ Building and eager-executing the graph """
     self.vocab_size = vocab_size
     self.num_sampled = num_sampled
+    # Eager execution of embed matrix and nce parameters: nce_weight and nce_bias
     self.embed_matrix = tfe.Variable(tf.random_uniform(
                                       [vocab_size, embed_size]))
     self.nce_weight = tfe.Variable(tf.truncated_normal(

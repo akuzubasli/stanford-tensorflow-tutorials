@@ -5,10 +5,11 @@ cs20.stanford.edu
 Chip Huyen (chiphuyen@cs.stanford.edu) & Akshay Agrawal (akshayka@cs.stanford.edu)
 Lecture 04
 """
-
+# Setup your environment
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
+# Import required packages
 import numpy as np
 import tensorflow as tf
 import tensorflow.contrib.eager as tfe
