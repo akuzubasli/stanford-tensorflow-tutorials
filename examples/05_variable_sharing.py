@@ -6,7 +6,7 @@ Lecture 05
 """
 
 ## name_scope recall
-### TensorBoard doesn’t know which nodes are similar to which nodes and should be grouped together. 
+### TensorBoard doesnt know which nodes are similar to which nodes and should be grouped together.
 ### we tell TF which nodes are similar and to be grouped together
 
 ## variable_scope
