@@ -92,8 +92,8 @@ class ConvNet(object):
         feature_dim = pool2.shape[1] * pool2.shape[2] * pool2.shape[3]
         pool2 = tf.reshape(pool2, [-1, feature_dim])
         fc1_relu = tf.nn.relu(fully_connected(pool2, 1024, scope_name="fc1_relu"))
-        # drop_fc1 = tf.nn.dropout(fc1_relu, keep_prob=self.keep_prob, name="drop_fc1")
-        drop_fc1 = tf.layers.dropout(fc1_relu, rate=self.keep_prob, training=self.training, name="layers_dropout")
+        drop_fc1 = tf.nn.dropout(fc1_relu, keep_prob=self.keep_prob, name="drop_fc1")
+        #drop_fc1 = tf.layers.dropout(fc1_relu, rate=self.keep_prob, training=self.training, name="layers_dropout")
         self.logits = fully_connected(drop_fc1, self.num_classes, scope_name="logits")
 
     def loss(self):
