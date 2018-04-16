@@ -476,7 +476,7 @@ def _create_summary(self):
   with tf.name_scope("summaries"):
     tf.summary.scalar("loss", self.loss)
     tf.summary.scalar("accuracy", self.accuracy)
-    tf.summary.histogram("historgram loss", self.loss)
+    tf.summary.histogram("histogram_loss", self.loss)
     # because we have several summaries, we want to merge them into one top summary for easy management
     self.summary_op = tf.summary.merge_all()  # it is an op!
 

@@ -88,7 +88,7 @@ class ConvNet(object):
         conv1 = conv_relu(inputs=self.img, filters=32, k_size=5, stride=1, padding="SAME", scope_name="conv1")
         pool1 = maxpool(inputs=conv1, ksize=2, stride=2, padding="SAME")
         conv2 = conv_relu(pool1, filters=64, k_size=5, stride=1, padding="SAME", scope_name="conv2")
-        pool2 = maxpool(inputs=conv2, ksize=2, stride=2, padding="SAME")
+        pool2 = maxpool(inputs=conv2, ksize=2, stride=2, padding="SAME", scope_name="pool2")
         feature_dim = pool2.shape[1] * pool2.shape[2] * pool2.shape[3]
         pool2 = tf.reshape(pool2, [-1, feature_dim])
         fc1_relu = tf.nn.relu(fully_connected(pool2, 1024, scope_name="fc1_relu"))
@@ -134,7 +134,7 @@ class ConvNet(object):
         with tf.name_scope("summaries"):
             tf.summary.scalar("loss", self.loss)
             tf.summary.scalar("accuracy", self.accuracy)
-            tf.summary.histogram("historgram loss", self.loss)
+            tf.summary.histogram("histogram_loss", self.loss)
             # because we have several summaries, we want to merge them into one top summary for easy management
             self.summary_op = tf.summary.merge_all()
         
