@@ -194,7 +194,7 @@ class ConvNet(object):
             sess.run(tf.global_variables_initializer())
             saver = tf.train.Saver()
             ckpt = tf.train.get_checkpoint_state(os.path.dirname('checkpoints/convnet_mnist/checkpoint'))
-            if ckpt and ckpt.model_checkpoint_path:
+            if ckpt and ckpt.model_checkpoint_path: # checks if ckpt and its dir are both valid
                 saver.restore(sess, ckpt.model_checkpoint_path)
             
             step = self.gstep.eval()

@@ -20,14 +20,26 @@ def conv_relu(inputs, filters, k_size, stride, padding, scope_name):
     #############################
     ########## TO DO ############
     #############################
-    return None
+    with tf.variable_scope(scope_name, reuse=tf.AUTO_REUSE) as scope: # open a scope, with a name scope_name which is reusable
+        in_channel = inputs.shape[-1]
+        kernel = tf.get_variable("kernel", shape=[k_size, k_size, in_channel, filters],
+                                 initializer=tf.truncated_normal_initializer())
+        bias = tf.get_variable("bias", shape=[filters], initializer=tf.random_normal_initializer())
+        conv = tf.nn.conv2d(input=inputs,
+                              filter=kernel, strides=[1, stride, stride, 1], padding=padding)
+    return tf.nn.relu(conv + bias, name=scope_name)
 
 def maxpool(inputs, ksize, stride, padding='VALID', scope_name='pool'):
     '''A method that does max pooling on inputs'''
     #############################
     ########## TO DO ############
     #############################
-    return None
+    with tf.variable_scope(scope_name, reuse=tf.AUTO_REUSE) as scope:
+        pool = tf.nn.max_pool(inputs,
+                          ksize=[1, ksize, ksize, 1],
+                          strides=[1, stride, stride, 1],
+                          padding=padding)
+    return pool
 
 def fully_connected(inputs, out_dim, scope_name='fc'):
     '''
@@ -36,18 +48,23 @@ def fully_connected(inputs, out_dim, scope_name='fc'):
     #############################
     ########## TO DO ############
     #############################
-    return None
+    with tf.variable_scope(scope_name, reuse=tf.AUTO_REUSE) as scope:
+        weights = tf.get_variable("weights", shape=[inputs.shape[1], out_dim],
+                                 initializer=tf.truncated_normal_initializer())
+        bias = tf.get_variable("bias", shape=[out_dim], initializer=tf.constant_initializer(0.0))
+    return tf.matmul(inputs, weights) + bias
 
 class ConvNet(object):
     def __init__(self):
         self.lr = 0.001
         self.batch_size = 128
         self.keep_prob = tf.constant(0.75)
-        self.gstep = tf.Variable(0, dtype=tf.int32, 
+        self.gstep = tf.Variable(0, dtype=tf.int32,
                                 trainable=False, name='global_step')
-        self.n_classes = 10
+        self.num_classes = 10
         self.skip_step = 20
-        self.n_test = 10000
+        self.num_test = 10000
+        self.training = True
 
     def get_data(self):
         with tf.name_scope('data'):
@@ -68,7 +85,16 @@ class ConvNet(object):
         #############################
         ########## TO DO ############
         #############################
-        self.logits = None
+        conv1 = conv_relu(inputs=self.img, filters=32, k_size=5, stride=1, padding="SAME", scope_name="conv1")
+        pool1 = maxpool(inputs=conv1, ksize=2, stride=2, padding="SAME")
+        conv2 = conv_relu(pool1, filters=64, k_size=5, stride=1, padding="SAME", scope_name="conv2")
+        pool2 = maxpool(inputs=conv2, ksize=2, stride=2, padding="SAME")
+        feature_dim = pool2.shape[1] * pool2.shape[2] * pool2.shape[3]
+        pool2 = tf.reshape(pool2, [-1, feature_dim])
+        fc1_relu = tf.nn.relu(fully_connected(pool2, 1024, scope_name="fc1_relu"))
+        # drop_fc1 = tf.nn.dropout(fc1_relu, keep_prob=self.keep_prob, name="drop_fc1")
+        drop_fc1 = tf.layers.dropout(fc1_relu, rate=self.keep_prob, training=self.training, name="layers_dropout")
+        self.logits = fully_connected(drop_fc1, self.num_classes, scope_name="logits")
 
     def loss(self):
         '''
@@ -81,7 +107,9 @@ class ConvNet(object):
         #############################
         ########## TO DO ############
         #############################
-        self.loss = None
+        with tf.name_scope("loss"):
+            entropy = tf.nn.softmax_cross_entropy_with_logits_v2(labels=self.label, logits=self.logits)
+            self.loss = tf.reduce_mean(entropy, name="loss")
     
     def optimize(self):
         '''
@@ -92,7 +120,8 @@ class ConvNet(object):
         #############################
         ########## TO DO ############
         #############################
-        self.opt = None
+        self.opt = tf.train.AdamOptimizer(learning_rate=self.lr).minimize(self.loss,
+                                                                          global_step=self.gstep)
 
     def summary(self):
         '''
@@ -102,7 +131,12 @@ class ConvNet(object):
         #############################
         ########## TO DO ############
         #############################
-        self.summary_op = None
+        with tf.name_scope("summaries"):
+            tf.summary.scalar("loss", self.loss)
+            tf.summary.scalar("accuracy", self.accuracy)
+            tf.summary.histogram("historgram loss", self.loss)
+            # because we have several summaries, we want to merge them into one top summary for easy management
+            self.summary_op = tf.summary.merge_all()
         
     def eval(self):
         '''
@@ -126,7 +160,8 @@ class ConvNet(object):
 
     def train_one_epoch(self, sess, saver, init, writer, epoch, step):
         start_time = time.time()
-        sess.run(init) 
+        sess.run(init)
+        self.training = True
         total_loss = 0
         n_batches = 0
         try:
@@ -148,6 +183,7 @@ class ConvNet(object):
     def eval_once(self, sess, init, writer, epoch, step):
         start_time = time.time()
         sess.run(init)
+        self.training = False
         total_correct_preds = 0
         try:
             while True:
@@ -157,7 +193,7 @@ class ConvNet(object):
         except tf.errors.OutOfRangeError:
             pass
 
-        print('Accuracy at epoch {0}: {1} '.format(epoch, total_correct_preds/self.n_test))
+        print('Accuracy at epoch {0}: {1} '.format(epoch, total_correct_preds/self.num_test))
         print('Took: {0} seconds'.format(time.time() - start_time))
 
     def train(self, n_epochs):
